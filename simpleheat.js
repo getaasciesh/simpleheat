@@ -1,5 +1,4 @@
 'use strict';
-
 if (typeof module !== 'undefined') module.exports = simpleheat;
 
 function simpleheat(canvas) {
@@ -10,6 +9,7 @@ function simpleheat(canvas) {
     this._ctx = canvas.getContext('2d');
     this._width = canvas.width;
     this._height = canvas.height;
+    this._circles = {};
 
     this._max = 1;
     this._data = [];
@@ -65,7 +65,7 @@ simpleheat.prototype = {
         ctx.arc(-r2, -r2, r, 0, Math.PI * 2, true);
         ctx.closePath();
         ctx.fill();
-
+        this._circles[r] = circle;
         return this;
     },
 
@@ -96,7 +96,6 @@ simpleheat.prototype = {
     },
 
     draw: function (minOpacity) {
-        if (!this._circle) this.radius(this.defaultRadius);
         if (!this._grad) this.gradient(this.defaultGradient);
 
         var ctx = this._ctx;
@@ -107,7 +106,9 @@ simpleheat.prototype = {
         for (var i = 0, len = this._data.length, p; i < len; i++) {
             p = this._data[i];
             ctx.globalAlpha = Math.max(p[2] / this._max, minOpacity === undefined ? 0.05 : minOpacity);
-            ctx.drawImage(this._circle, p[0] - this._r, p[1] - this._r);
+            var radius = Math.round(p.length < 4 ? this.defaultRadius : p[3]);
+            if(!this._circles[radius]) this.radius(radius);
+            ctx.drawImage(this._circles[radius], p[0] - this._r, p[1] - this._r);
         }
 
         // colorize the heatmap, using opacity value of each pixel to get the right color from our gradient
